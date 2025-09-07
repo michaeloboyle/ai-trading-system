@@ -1,0 +1,35 @@
+{
+  "name": "ai-trading-engine",
+  "version": "1.0.0",
+  "description": "AI-powered trading engine based on Flow Nexus mastery",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "jest",
+    "test:watch": "jest --watch"
+  },
+  "dependencies": {
+    "redis": "^4.6.0",
+    "pg": "^8.11.0",
+    "express": "^4.18.0",
+    "cors": "^2.8.5",
+    "helmet": "^7.0.0",
+    "winston": "^3.10.0",
+    "node-cron": "^3.0.0",
+    "lodash": "^4.17.21",
+    "moment": "^2.29.4",
+    "axios": "^1.5.0",
+    "@ruvnet/bmssp": "^1.0.0"
+  },
+  "devDependencies": {
+    "jest": "^29.6.0",
+    "nodemon": "^3.0.0",
+    "supertest": "^6.3.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "author": "Michael O'Boyle",
+  "license": "MIT"
+}

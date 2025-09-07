@@ -1,0 +1,153 @@
+version: '3.8'
+
+services:
+  # Redis for caching market data and signals
+  redis:
+    image: redis:7-alpine
+    container_name: trading-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - trading-network
+
+  # PostgreSQL for storing trading data
+  postgres:
+    image: postgres:15-alpine
+    container_name: trading-db
+    environment:
+      POSTGRES_DB: trading
+      POSTGRES_USER: trader
+      POSTGRES_PASSWORD: secure_password_123
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./sql/init:/docker-entrypoint-initdb.d
+    networks:
+      - trading-network
+
+  # Market data fetcher service
+  data-fetcher:
+    build:
+      context: .
+      dockerfile: services/data-fetcher/Dockerfile
+    container_name: trading-data-fetcher
+    environment:
+      - NODE_ENV=production
+      - REDIS_URL=redis://redis:6379
+      - DB_URL=postgresql://trader:secure_password_123@postgres:5432/trading
+      - ALPHA_VANTAGE_API_KEY=${ALPHA_VANTAGE_API_KEY}
+      - POLYGON_API_KEY=${POLYGON_API_KEY}
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - trading-network
+    restart: unless-stopped
+
+  # Trading engine - core algorithm
+  trading-engine:
+    build:
+      context: .
+      dockerfile: services/trading-engine/Dockerfile
+    container_name: trading-engine
+    environment:
+      - NODE_ENV=production
+      - REDIS_URL=redis://redis:6379
+      - DB_URL=postgresql://trader:secure_password_123@postgres:5432/trading
+      - PAPER_TRADING=true
+      - RISK_LIMIT=0.02
+      - STARTING_BALANCE=10000
+    depends_on:
+      - redis
+      - postgres
+      - data-fetcher
+    networks:
+      - trading-network
+    restart: unless-stopped
+
+  # Risk management service
+  risk-manager:
+    build:
+      context: .
+      dockerfile: services/risk-manager/Dockerfile
+    container_name: trading-risk-manager
+    environment:
+      - NODE_ENV=production
+      - REDIS_URL=redis://redis:6379
+      - DB_URL=postgresql://trader:secure_password_123@postgres:5432/trading
+      - MAX_PORTFOLIO_RISK=0.05
+      - MAX_POSITION_SIZE=0.10
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - trading-network
+    restart: unless-stopped
+
+  # Web dashboard for monitoring
+  dashboard:
+    build:
+      context: .
+      dockerfile: services/dashboard/Dockerfile
+    container_name: trading-dashboard
+    environment:
+      - NODE_ENV=production
+      - REDIS_URL=redis://redis:6379
+      - DB_URL=postgresql://trader:secure_password_123@postgres:5432/trading
+    ports:
+      - "3000:3000"
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - trading-network
+    restart: unless-stopped
+
+  # Backtesting service
+  backtester:
+    build:
+      context: .
+      dockerfile: services/backtester/Dockerfile
+    container_name: trading-backtester
+    environment:
+      - NODE_ENV=production
+      - DB_URL=postgresql://trader:secure_password_123@postgres:5432/trading
+    depends_on:
+      - postgres
+    networks:
+      - trading-network
+    profiles:
+      - backtesting
+
+  # Grafana for advanced monitoring
+  grafana:
+    image: grafana/grafana:latest
+    container_name: trading-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources
+    depends_on:
+      - postgres
+    networks:
+      - trading-network
+    profiles:
+      - monitoring
+
+networks:
+  trading-network:
+    driver: bridge
+
+volumes:
+  redis_data:
+  postgres_data:
+  grafana_data:
