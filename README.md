@@ -300,6 +300,7 @@ services:
 - [API Reference](docs/api.md)
 - [Deployment Guide](docs/deployment.md)
 - [Troubleshooting](docs/troubleshooting.md)
+- [Prioritization Rubric](docs/prioritization.md)
 
 ## 📄 License
 

@@ -1,0 +1,38 @@
+name: Feature Request
+description: Propose a new capability or enhancement
+title: "[Feature] <Short description>"
+labels: ["feature", "triage"]
+assignees: []
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What problem does this feature solve?
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: Key behaviors, user stories, and non-goals
+  - type: textarea
+    id: tech_notes
+    attributes:
+      label: Technical notes
+      description: APIs, data models, migrations, risks
+  - type: input
+    id: effort
+    attributes:
+      label: Estimated engineering effort (points)
+      placeholder: 3
+  - type: input
+    id: impact
+    attributes:
+      label: Expected impact (0-5)
+      placeholder: 3
+  - type: input
+    id: confidence
+    attributes:
+      label: Confidence (0.0-1.0)
+      placeholder: 0.7

@@ -1,0 +1,130 @@
+name: Exchange Integration
+description: Propose integrating a new broker/exchange (e.g., Kalshi, Alpaca, Binance)
+title: "[Exchange] <Name> integration"
+labels: ["exchange", "triage"]
+assignees: []
+body:
+  - type: input
+    id: exchange_name
+    attributes:
+      label: Exchange name
+      placeholder: e.g., Kalshi
+    validations:
+      required: true
+  - type: dropdown
+    id: asset_class
+    attributes:
+      label: Asset class
+      options:
+        - Equities
+        - Crypto
+        - Event Markets (Kalshi)
+        - Forex
+        - Futures
+        - Options
+    validations:
+      required: true
+  - type: input
+    id: api_docs
+    attributes:
+      label: API docs URL
+      placeholder: https://...
+    validations:
+      required: true
+  - type: dropdown
+    id: api_protocols
+    attributes:
+      label: API protocols
+      multiple: true
+      options:
+        - REST
+        - WebSocket
+        - FIX
+  - type: dropdown
+    id: paper_trading
+    attributes:
+      label: Paper/sandbox environment available?
+      options: ["Yes", "No"]
+    validations:
+      required: true
+  - type: dropdown
+    id: historical_data
+    attributes:
+      label: Historical data availability
+      options:
+        - Full (OHLCV + order book)
+        - Partial (OHLCV)
+        - None
+    validations:
+      required: true
+  - type: textarea
+    id: supported_markets
+    attributes:
+      label: Supported markets / instruments
+      description: Symbols, contracts, regions, and any notable limitations
+  - type: input
+    id: fees_taker_bps
+    attributes:
+      label: Taker fee (bps)
+      description: Basis points; if tiered, provide typical tier
+      placeholder: 10
+  - type: input
+    id: fees_maker_bps
+    attributes:
+      label: Maker fee (bps)
+      placeholder: 0
+  - type: input
+    id: est_liquidity
+    attributes:
+      label: Estimated liquidity score (0-5)
+      description: 0=illiquid, 5=very deep; use public metrics where possible
+      placeholder: 3
+  - type: input
+    id: strategy_edge
+    attributes:
+      label: Expected strategy edge (0-5)
+      description: How well our current/near-term strategies fit this venue
+      placeholder: 4
+  - type: input
+    id: data_latency_ms
+    attributes:
+      label: Data latency (ms)
+      placeholder: 150
+  - type: dropdown
+    id: regulatory_complexity
+    attributes:
+      label: Regulatory complexity
+      options: ["Low", "Medium", "High"]
+    validations:
+      required: true
+  - type: dropdown
+    id: kyc_required
+    attributes:
+      label: KYC/Account requirements
+      options: ["Standard", "Enhanced", "Unknown"]
+  - type: input
+    id: engineering_effort
+    attributes:
+      label: Estimated engineering effort (points)
+      description: Use Fibonacci sizing (1,2,3,5,8,13)
+      placeholder: 5
+  - type: textarea
+    id: key_endpoints
+    attributes:
+      label: Key endpoints to implement
+      description: Auth, list markets, order book, place/cancel, positions, balances
+  - type: textarea
+    id: risks
+    attributes:
+      label: Risks and constraints
+      description: Rate limits, API stability, regional limits, regulatory constraints
+  - type: input
+    id: confidence
+    attributes:
+      label: Confidence (0.0-1.0)
+      placeholder: 0.7
+  - type: textarea
+    id: references
+    attributes:
+      label: References
+      description: Links to docs, SDKs, example repos, forum threads
