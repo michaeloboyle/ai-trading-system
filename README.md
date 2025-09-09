@@ -4,6 +4,11 @@
 ### 🎯 Primary Objective
 Build a self-learning cryptocurrency trading system using cutting-edge 2025 AI research to achieve consistent profitability while maintaining strict risk management.
 
+### 🖥️ Dashboard Preview
+![AI Trading System Dashboard](dashboard-screenshot.png)
+
+*Professional monitoring interface with Monaco Editor integration, real-time market data, and comprehensive system analytics.*
+
 ### 🚀 Quick Start
 ```bash
 # 1. Setup environment
@@ -19,7 +24,18 @@ ollama pull llama3.1:8b
 # 3. Start development
 ./claude-tmux.sh start
 docker-compose up -d
+
+# 4. Open dashboard
+open simple-dashboard.html
 ```
+
+### 🎛️ Dashboard Features
+- **Real-time Market Data**: Live price feeds from Binance.US with IPv4-optimized connections
+- **Professional Log Viewer**: Monaco Editor with syntax highlighting and search functionality  
+- **Risk Management**: Visual display of position limits, daily caps, and safety controls
+- **System Analytics**: Performance metrics, success rates, and uptime monitoring
+- **Paper Trading Safety**: Comprehensive simulation mode with zero financial risk
+- **Emergency Controls**: One-click stop functionality with complete transparency
 
 ### 📋 Key Documentation
 - **[Product Requirements](PRD-AI-Trading-System.md)** - Complete project specification
