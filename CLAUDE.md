@@ -61,6 +61,13 @@ Transform $1000 starting capital into consistent 20-50% monthly returns using 20
 ### Success Definition  
 System successfully transforms $1000 → $1200+ in first month while maintaining 100% risk compliance and demonstrating continuous learning improvement.
 
+## Security Notes
+- **NEVER commit .env files or API keys to version control**
+- **API keys are stored in .env (excluded from git tracking)**
+- **Use environment variables for all sensitive configuration**
+- **Verify .gitignore includes .env before making any commits**
+- **.env file has restricted permissions (600) for security**
+
 ### Service Access
 - **Dashboard:** http://localhost:3000
 - **Grafana:** http://localhost:3001 (admin/admin123)
