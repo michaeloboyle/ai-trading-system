@@ -1,92 +1,38 @@
 /**
  * Global test setup for AI Trading System
- * Configures common test utilities and mocks
+ * Minimal setup for our test suite
  */
 
 // Set test environment variables
 process.env.NODE_ENV = 'test';
-process.env.REDIS_URL = 'redis://localhost:6379/1';
-process.env.DB_URL = 'postgresql://trader:test_password@localhost:5433/trading_test';
 process.env.PAPER_TRADING = 'true';
-process.env.STARTING_BALANCE = '10000';
-process.env.RISK_LIMIT = '0.02';
+process.env.STARTING_BALANCE = '1000';
+process.env.RISK_LIMIT = '0.01';
+process.env.MAX_DAILY_RISK = '0.02';
 
 // Global test timeout
 jest.setTimeout(10000);
 
-// Mock external services by default
-jest.mock('axios', () => ({
-  create: jest.fn(() => ({
-    get: jest.fn(),
-    post: jest.fn(),
-    put: jest.fn(),
-    delete: jest.fn(),
-    interceptors: {
-      request: { use: jest.fn() },
-      response: { use: jest.fn() }
-    }
-  })),
-  get: jest.fn(),
-  post: jest.fn(),
-  put: jest.fn(),
-  delete: jest.fn()
-}));
+// Mock console to reduce test noise
+const originalConsole = console;
+global.console = {
+  ...console,
+  log: jest.fn(),
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: originalConsole.warn,
+  error: originalConsole.error
+};
 
-// Mock Redis by default
-jest.mock('redis', () => ({
-  createClient: jest.fn(() => ({
-    connect: jest.fn(),
-    disconnect: jest.fn(),
-    get: jest.fn(),
-    set: jest.fn(),
-    del: jest.fn(),
-    exists: jest.fn(),
-    hget: jest.fn(),
-    hset: jest.fn(),
-    hdel: jest.fn(),
-    lpush: jest.fn(),
-    rpop: jest.fn(),
-    publish: jest.fn(),
-    subscribe: jest.fn(),
-    on: jest.fn(),
-    off: jest.fn()
-  }))
-}));
-
-// Mock PostgreSQL by default  
-jest.mock('pg', () => ({
-  Pool: jest.fn(() => ({
-    connect: jest.fn(),
-    end: jest.fn(),
-    query: jest.fn()
-  })),
-  Client: jest.fn(() => ({
-    connect: jest.fn(),
-    end: jest.fn(), 
-    query: jest.fn()
-  }))
-}));
-
-// Mock Winston logger
-jest.mock('winston', () => ({
-  createLogger: jest.fn(() => ({
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-    debug: jest.fn()
-  })),
-  format: {
-    combine: jest.fn(),
-    timestamp: jest.fn(),
-    printf: jest.fn(),
-    colorize: jest.fn(),
-    json: jest.fn()
-  },
-  transports: {
-    Console: jest.fn(),
-    File: jest.fn()
-  }
-}));
+// Mock fetch for HTTP requests
+global.fetch = jest.fn(() =>
+  Promise.resolve({
+    ok: true,
+    status: 200,
+    json: () => Promise.resolve({}),
+    text: () => Promise.resolve('')
+  })
+);
 
 // Global test utilities
 global.testUtils = {

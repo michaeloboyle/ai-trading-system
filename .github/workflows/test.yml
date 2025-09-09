@@ -1,0 +1,104 @@
+name: Test Coverage
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run tests with coverage
+      run: npm run test:ci
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage/lcov.info
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: true
+    
+    - name: Generate coverage badge
+      if: matrix.node-version == '20.x'
+      run: |
+        npm run coverage:json
+        COVERAGE=$(node -p "Math.floor(JSON.parse(require('fs').readFileSync('coverage/coverage-summary.json')).total.lines.pct)")
+        echo "COVERAGE=$COVERAGE" >> $GITHUB_ENV
+        
+        # Create badge color based on coverage
+        if [ $COVERAGE -ge 90 ]; then
+          COLOR="brightgreen"
+        elif [ $COVERAGE -ge 80 ]; then
+          COLOR="green"
+        elif [ $COVERAGE -ge 70 ]; then
+          COLOR="yellow"
+        elif [ $COVERAGE -ge 60 ]; then
+          COLOR="orange"
+        else
+          COLOR="red"
+        fi
+        echo "COVERAGE_COLOR=$COLOR" >> $GITHUB_ENV
+    
+    - name: Create coverage badge
+      if: matrix.node-version == '20.x'
+      uses: schneegans/dynamic-badges-action@v1.6.0
+      with:
+        auth: ${{ secrets.GITHUB_TOKEN }}
+        gistID: ${{ secrets.GIST_ID }}
+        filename: ai-trading-system-coverage.json
+        label: Coverage
+        message: ${{ env.COVERAGE }}%
+        color: ${{ env.COVERAGE_COLOR }}
+
+  lint:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Use Node.js 20.x
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run linter
+      run: npm run lint
+
+  security:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Run security audit
+      run: npm audit --audit-level high
+    
+    - name: Check for secrets
+      uses: trufflesecurity/trufflehog@main
+      with:
+        path: ./
+        base: main
+        head: HEAD
