@@ -29,6 +29,38 @@ npm test            # Run Jest tests
 npm run test:watch  # Watch mode testing
 ```
 
+### Tmux Session Management
+```bash
+# Create persistent Claude Code session  
+./claude-tmux.sh start
+
+# Attach to existing session (for VSCode Claude extension)
+./claude-tmux.sh attach
+
+# Stop session
+./claude-tmux.sh stop
+```
+
+## Mission-Critical Context
+
+### Primary Objective
+Transform $1000 starting capital into consistent 20-50% monthly returns using 2025 AI research while maintaining strict risk management.
+
+### Core Documentation Priority
+1. **PRD-AI-Trading-System.md** - Complete project specification
+2. **CLAUDE-FLOW-DOCUMENTATION.md** - Hive mind coordination guide
+3. **IMPLEMENTATION-GUIDE.md** - Step-by-step development roadmap
+4. **QUICK-START-GUIDE.md** - 7-day profit implementation plan
+
+### Key Constraints
+- Maximum $10 loss per trade (1% of capital)
+- Daily loss limit $20 (2% of capital) 
+- Emergency reserve $200 untouchable (20% of capital)
+- AI costs <10% of monthly profits
+
+### Success Definition  
+System successfully transforms $1000 → $1200+ in first month while maintaining 100% risk compliance and demonstrating continuous learning improvement.
+
 ### Service Access
 - **Dashboard:** http://localhost:3000
 - **Grafana:** http://localhost:3001 (admin/admin123)
