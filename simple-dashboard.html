@@ -475,6 +475,7 @@
                 <button class="btn" onclick="runSafeTest()">🧪 Run Safe Test</button>
                 <button class="btn" onclick="checkArbitrage()">🔍 Scan Arbitrage</button>
                 <button class="btn" onclick="runDetailedAnalysis()">🧠 Detailed Analysis</button>
+                <button class="btn" onclick="testCharts()">📈 Test Charts</button>
                 <button class="btn btn-danger" onclick="emergencyStop()">🚨 Emergency Stop</button>
             </div>
         </div>
@@ -708,21 +709,18 @@
         // Chart initialization and data functions
         function generateTimeSeriesData(basePrice, points, volatility = 0.02) {
             const data = [];
+            const labels = [];
             let currentPrice = basePrice;
-            const now = Date.now();
             
-            for (let i = points - 1; i >= 0; i--) {
-                const timestamp = now - (i * getTimeframeDuration() / points);
+            for (let i = 0; i < points; i++) {
                 // Add random walk with slight upward bias
                 const change = (Math.random() - 0.48) * volatility;
                 currentPrice *= (1 + change);
                 
-                data.push({
-                    x: timestamp,
-                    y: currentPrice
-                });
+                data.push(currentPrice);
+                labels.push(i);
             }
-            return data;
+            return { data, labels };
         }
 
         function getTimeframeDuration() {
@@ -752,14 +750,15 @@
         function createChart(canvasId, pair, basePrice, color) {
             const ctx = document.getElementById(canvasId);
             const dataPoints = getDataPoints();
-            const data = generateTimeSeriesData(basePrice, dataPoints);
+            const chartData = generateTimeSeriesData(basePrice, dataPoints);
             
             return new Chart(ctx, {
                 type: 'line',
                 data: {
+                    labels: chartData.labels,
                     datasets: [{
                         label: pair,
-                        data: data,
+                        data: chartData.data,
                         borderColor: color,
                         backgroundColor: color + '20',
                         borderWidth: 2,
@@ -802,7 +801,6 @@
                     },
                     scales: {
                         x: {
-                            type: 'time',
                             display: true,
                             grid: {
                                 color: 'rgba(255, 255, 255, 0.1)'
@@ -821,7 +819,7 @@
                                 color: '#ccc',
                                 callback: function(value) {
                                     return pair.includes('BTC') ? 
-                                        '$' + value.toLocaleString() : 
+                                        '$' + Math.round(value).toLocaleString() : 
                                         value.toFixed(4);
                                 }
                             }
@@ -836,14 +834,33 @@
         }
 
         function initializeCharts() {
-            // Create USDC chart
-            usdcChart = createChart('usdcChart', 'USDC-USD', 1.000, '#4CAF50');
-            
-            // Create BTC chart  
-            btcChart = createChart('btcChart', 'BTC-USDT', 112347, '#FF9800');
-            
-            addLog('📈 Live market charts initialized');
-            addLog(`📊 Timeframe: ${currentTimeframe} with ${getDataPoints()} data points`);
+            try {
+                addLog('📈 Initializing Chart.js...');
+                
+                // Check if Chart.js is loaded
+                if (typeof Chart === 'undefined') {
+                    addLog('❌ Chart.js not loaded! Retrying in 2 seconds...');
+                    setTimeout(initializeCharts, 2000);
+                    return;
+                }
+                
+                addLog('✅ Chart.js loaded successfully');
+                
+                // Create USDC chart
+                addLog('📊 Creating USDC-USD chart...');
+                usdcChart = createChart('usdcChart', 'USDC-USD', 1.000, '#4CAF50');
+                
+                // Create BTC chart  
+                addLog('📊 Creating BTC-USDT chart...');
+                btcChart = createChart('btcChart', 'BTC-USDT', 112347, '#FF9800');
+                
+                addLog('📈 Live market charts initialized successfully');
+                addLog(`📊 Timeframe: ${currentTimeframe} with ${getDataPoints()} data points`);
+                
+            } catch (error) {
+                addLog(`❌ Chart initialization error: ${error.message}`);
+                console.error('Chart initialization error:', error);
+            }
         }
 
         function setTimeframe(timeframe) {
@@ -864,12 +881,13 @@
         function updateChartData() {
             if (usdcChart) {
                 const usdcData = generateTimeSeriesData(1.000, getDataPoints(), 0.003);
-                usdcChart.data.datasets[0].data = usdcData;
+                usdcChart.data.labels = usdcData.labels;
+                usdcChart.data.datasets[0].data = usdcData.data;
                 usdcChart.update('none');
                 
                 // Update price display
-                const currentPrice = usdcData[usdcData.length - 1].y;
-                const previousPrice = usdcData[usdcData.length - 2].y;
+                const currentPrice = usdcData.data[usdcData.data.length - 1];
+                const previousPrice = usdcData.data[usdcData.data.length - 2];
                 const change = ((currentPrice - previousPrice) / previousPrice * 100);
                 
                 document.getElementById('usdcPrice').textContent = currentPrice.toFixed(4);
@@ -880,12 +898,13 @@
             
             if (btcChart) {
                 const btcData = generateTimeSeriesData(112347, getDataPoints(), 0.05);
-                btcChart.data.datasets[0].data = btcData;
+                btcChart.data.labels = btcData.labels;
+                btcChart.data.datasets[0].data = btcData.data;
                 btcChart.update('none');
                 
                 // Update price display
-                const currentPrice = btcData[btcData.length - 1].y;
-                const previousPrice = btcData[btcData.length - 2].y;
+                const currentPrice = btcData.data[btcData.data.length - 1];
+                const previousPrice = btcData.data[btcData.data.length - 2];
                 const change = ((currentPrice - previousPrice) / previousPrice * 100);
                 
                 document.getElementById('btcPrice').textContent = '$' + Math.round(currentPrice).toLocaleString();
@@ -977,6 +996,28 @@
             }
         }
 
+        function testCharts() {
+            addLog('📈 Testing chart functionality...');
+            
+            if (typeof Chart === 'undefined') {
+                addLog('❌ Chart.js library not loaded');
+                return;
+            }
+            
+            addLog('✅ Chart.js library loaded');
+            
+            if (!usdcChart || !btcChart) {
+                addLog('⚠️ Charts not initialized. Attempting to initialize...');
+                initializeCharts();
+                return;
+            }
+            
+            addLog('✅ Charts initialized');
+            addLog('🔄 Updating chart data...');
+            updateChartData();
+            addLog('✅ Chart test complete');
+        }
+
         function searchLogs() {
             if (monacoEditor) {
                 monacoEditor.trigger('', 'actions.find');
@@ -1049,11 +1090,15 @@
         window.addEventListener('load', function() {
             initializeMonaco();
             
-            // Wait a bit for Monaco to load, then initialize charts
+            // Wait for Monaco and Chart.js to load, then initialize charts
             setTimeout(() => {
                 initializeCharts();
+            }, 2000);
+            
+            // Start chart updates after initialization
+            setTimeout(() => {
                 startChartUpdates();
-            }, 1000);
+            }, 3000);
         });
         
         // Update every second
