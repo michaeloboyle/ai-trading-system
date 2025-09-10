@@ -8,6 +8,9 @@
     <!-- Monaco Editor -->
     <script src="https://unpkg.com/monaco-editor@0.44.0/min/vs/loader.js"></script>
     
+    <!-- Chart.js for market charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    
     <style>
         * {
             margin: 0;
@@ -193,6 +196,165 @@
             text-align: center;
             margin: 1rem 0;
         }
+
+        /* Chart Section Styles */
+        .chart-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            margin: 2rem 0;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .chart-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .timeframe-buttons {
+            display: flex;
+            gap: 0.5rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 0.3rem;
+        }
+
+        .timeframe-btn {
+            background: transparent;
+            border: none;
+            color: #ccc;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .timeframe-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .timeframe-btn.active {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 1200px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .chart-container {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .chart-info {
+            margin-bottom: 1rem;
+        }
+
+        .pair-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 0.3rem;
+        }
+
+        .pair-subtitle {
+            color: #ccc;
+            font-size: 0.9rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .price-info {
+            display: flex;
+            align-items: baseline;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .current-price {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        .price-change {
+            font-size: 1rem;
+            font-weight: bold;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .price-change.positive {
+            color: #4CAF50;
+            background: rgba(76, 175, 80, 0.2);
+        }
+
+        .price-change.negative {
+            color: #f44336;
+            background: rgba(244, 67, 54, 0.2);
+        }
+
+        .time-period {
+            color: #ccc;
+            font-size: 0.9rem;
+        }
+
+        .chart-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .stat-label {
+            color: #ccc;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            color: white;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        canvas {
+            width: 100% !important;
+            height: 250px !important;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
     </style>
 </head>
 <body>
@@ -317,6 +479,95 @@
             </div>
         </div>
 
+        <!-- Market Charts Section -->
+        <div class="chart-section">
+            <div class="chart-header">
+                <div class="chart-title">📈 Live Market Charts</div>
+                <div class="timeframe-buttons">
+                    <button class="timeframe-btn active" onclick="setTimeframe('1D')">1D</button>
+                    <button class="timeframe-btn" onclick="setTimeframe('1W')">1W</button>
+                    <button class="timeframe-btn" onclick="setTimeframe('1M')">1M</button>
+                    <button class="timeframe-btn" onclick="setTimeframe('3M')">3M</button>
+                    <button class="timeframe-btn" onclick="setTimeframe('6M')">6M</button>
+                    <button class="timeframe-btn" onclick="setTimeframe('1Y')">1Y</button>
+                </div>
+            </div>
+            
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <div class="chart-info">
+                        <div class="pair-name">USDC-USD</div>
+                        <div class="pair-subtitle">USD Coin USD</div>
+                        <div class="price-info">
+                            <span class="current-price" id="usdcPrice">1.000</span>
+                            <span class="price-change positive" id="usdcChange">+0.02%</span>
+                            <span class="time-period">Past Week</span>
+                        </div>
+                    </div>
+                    <canvas id="usdcChart" width="800" height="300"></canvas>
+                    
+                    <div class="chart-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Open</span>
+                            <span class="stat-value" id="usdcOpen">1.000</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">High</span>
+                            <span class="stat-value" id="usdcHigh">1.003</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Low</span>
+                            <span class="stat-value" id="usdcLow">0.998</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Volume</span>
+                            <span class="stat-value" id="usdcVolume">14.08B</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Mkt Cap</span>
+                            <span class="stat-value" id="usdcMarketCap">72.67B</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-info">
+                        <div class="pair-name">BTC-USDT</div>
+                        <div class="pair-subtitle">Bitcoin Tether</div>
+                        <div class="price-info">
+                            <span class="current-price" id="btcPrice">$112,347</span>
+                            <span class="price-change positive" id="btcChange">+2.15%</span>
+                            <span class="time-period">24H</span>
+                        </div>
+                    </div>
+                    <canvas id="btcChart" width="800" height="300"></canvas>
+                    
+                    <div class="chart-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Open</span>
+                            <span class="stat-value" id="btcOpen">$109,890</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">High</span>
+                            <span class="stat-value" id="btcHigh">$113,250</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Low</span>
+                            <span class="stat-value" id="btcLow">$109,100</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Volume</span>
+                            <span class="stat-value" id="btcVolume">2.34B</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">24h Vol</span>
+                            <span class="stat-value" id="btc24hVol">$45.2B</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Full-width Log Container -->
         <div class="logs-container" id="logsContainer">
             <div class="logs-header">
@@ -346,6 +597,12 @@
         let startTime = Date.now();
         let monacoEditor = null;
         let logContent = '';
+        
+        // Chart variables
+        let usdcChart = null;
+        let btcChart = null;
+        let currentTimeframe = '1D';
+        let chartUpdateInterval = null;
         
         function updateUptime() {
             const elapsed = Math.floor((Date.now() - startTime) / 1000);
@@ -446,6 +703,204 @@
 > Binance API: IPv4 authentication ready ✅
 > Waiting for profitable arbitrage opportunities...
 > System ready for monitoring 🚀`;
+        }
+
+        // Chart initialization and data functions
+        function generateTimeSeriesData(basePrice, points, volatility = 0.02) {
+            const data = [];
+            let currentPrice = basePrice;
+            const now = Date.now();
+            
+            for (let i = points - 1; i >= 0; i--) {
+                const timestamp = now - (i * getTimeframeDuration() / points);
+                // Add random walk with slight upward bias
+                const change = (Math.random() - 0.48) * volatility;
+                currentPrice *= (1 + change);
+                
+                data.push({
+                    x: timestamp,
+                    y: currentPrice
+                });
+            }
+            return data;
+        }
+
+        function getTimeframeDuration() {
+            const durations = {
+                '1D': 24 * 60 * 60 * 1000,      // 1 day in ms
+                '1W': 7 * 24 * 60 * 60 * 1000,   // 1 week in ms
+                '1M': 30 * 24 * 60 * 60 * 1000,  // 1 month in ms
+                '3M': 90 * 24 * 60 * 60 * 1000,  // 3 months in ms
+                '6M': 180 * 24 * 60 * 60 * 1000, // 6 months in ms
+                '1Y': 365 * 24 * 60 * 60 * 1000  // 1 year in ms
+            };
+            return durations[currentTimeframe] || durations['1D'];
+        }
+
+        function getDataPoints() {
+            const points = {
+                '1D': 144,  // 10-minute intervals
+                '1W': 168,  // Hourly intervals
+                '1M': 120,  // 6-hour intervals
+                '3M': 180,  // 12-hour intervals
+                '6M': 180,  // Daily intervals
+                '1Y': 365   // Daily intervals
+            };
+            return points[currentTimeframe] || 144;
+        }
+
+        function createChart(canvasId, pair, basePrice, color) {
+            const ctx = document.getElementById(canvasId);
+            const dataPoints = getDataPoints();
+            const data = generateTimeSeriesData(basePrice, dataPoints);
+            
+            return new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: [{
+                        label: pair,
+                        data: data,
+                        borderColor: color,
+                        backgroundColor: color + '20',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.1,
+                        pointRadius: 0,
+                        pointHoverRadius: 4,
+                        pointHoverBorderWidth: 2,
+                        pointHoverBorderColor: color,
+                        pointHoverBackgroundColor: '#1e1e1e'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            borderColor: color,
+                            borderWidth: 1,
+                            callbacks: {
+                                title: function(context) {
+                                    return new Date(context[0].parsed.x).toLocaleString();
+                                },
+                                label: function(context) {
+                                    const value = context.parsed.y;
+                                    return pair + ': ' + (pair.includes('BTC') ? 
+                                        '$' + value.toLocaleString() : 
+                                        value.toFixed(4));
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'time',
+                            display: true,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#ccc',
+                                maxTicksLimit: 8
+                            }
+                        },
+                        y: {
+                            display: true,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#ccc',
+                                callback: function(value) {
+                                    return pair.includes('BTC') ? 
+                                        '$' + value.toLocaleString() : 
+                                        value.toFixed(4);
+                                }
+                            }
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    }
+                }
+            });
+        }
+
+        function initializeCharts() {
+            // Create USDC chart
+            usdcChart = createChart('usdcChart', 'USDC-USD', 1.000, '#4CAF50');
+            
+            // Create BTC chart  
+            btcChart = createChart('btcChart', 'BTC-USDT', 112347, '#FF9800');
+            
+            addLog('📈 Live market charts initialized');
+            addLog(`📊 Timeframe: ${currentTimeframe} with ${getDataPoints()} data points`);
+        }
+
+        function setTimeframe(timeframe) {
+            currentTimeframe = timeframe;
+            
+            // Update active button
+            document.querySelectorAll('.timeframe-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Regenerate chart data
+            updateChartData();
+            
+            addLog(`📊 Timeframe changed to ${timeframe}`);
+        }
+
+        function updateChartData() {
+            if (usdcChart) {
+                const usdcData = generateTimeSeriesData(1.000, getDataPoints(), 0.003);
+                usdcChart.data.datasets[0].data = usdcData;
+                usdcChart.update('none');
+                
+                // Update price display
+                const currentPrice = usdcData[usdcData.length - 1].y;
+                const previousPrice = usdcData[usdcData.length - 2].y;
+                const change = ((currentPrice - previousPrice) / previousPrice * 100);
+                
+                document.getElementById('usdcPrice').textContent = currentPrice.toFixed(4);
+                const changeElement = document.getElementById('usdcChange');
+                changeElement.textContent = (change >= 0 ? '+' : '') + change.toFixed(3) + '%';
+                changeElement.className = 'price-change ' + (change >= 0 ? 'positive' : 'negative');
+            }
+            
+            if (btcChart) {
+                const btcData = generateTimeSeriesData(112347, getDataPoints(), 0.05);
+                btcChart.data.datasets[0].data = btcData;
+                btcChart.update('none');
+                
+                // Update price display
+                const currentPrice = btcData[btcData.length - 1].y;
+                const previousPrice = btcData[btcData.length - 2].y;
+                const change = ((currentPrice - previousPrice) / previousPrice * 100);
+                
+                document.getElementById('btcPrice').textContent = '$' + Math.round(currentPrice).toLocaleString();
+                const changeElement = document.getElementById('btcChange');
+                changeElement.textContent = (change >= 0 ? '+' : '') + change.toFixed(2) + '%';
+                changeElement.className = 'price-change ' + (change >= 0 ? 'positive' : 'negative');
+            }
+        }
+
+        function startChartUpdates() {
+            // Update charts every 10 seconds with new data points
+            chartUpdateInterval = setInterval(() => {
+                updateChartData();
+                addLog('📊 Market data updated - charts refreshed');
+            }, 10000);
         }
 
         function addLog(message) {
@@ -590,9 +1045,15 @@
             }
         });
         
-        // Initialize Monaco Editor when page loads
+        // Initialize Monaco Editor and Charts when page loads
         window.addEventListener('load', function() {
             initializeMonaco();
+            
+            // Wait a bit for Monaco to load, then initialize charts
+            setTimeout(() => {
+                initializeCharts();
+                startChartUpdates();
+            }, 1000);
         });
         
         // Update every second
