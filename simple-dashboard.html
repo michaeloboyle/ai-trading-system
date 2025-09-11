@@ -8,8 +8,35 @@
     <!-- Monaco Editor -->
     <script src="https://unpkg.com/monaco-editor@0.44.0/min/vs/loader.js"></script>
     
-    <!-- Chart.js for market charts -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <!-- Chart.js for market charts - using IIFE build for better Safari compatibility -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script>
+        // Simple Chart.js availability check
+        window.chartJSReady = false;
+        
+        // Check for Chart.js in multiple ways
+        function checkChartJS() {
+            console.log('Checking Chart.js availability...');
+            console.log('typeof Chart:', typeof Chart);
+            console.log('window.Chart:', window.Chart);
+            console.log('Chart in window:', 'Chart' in window);
+            
+            if (typeof Chart !== 'undefined' || window.Chart) {
+                window.chartJSReady = true;
+                window.Chart = window.Chart || Chart;
+                console.log('Chart.js loaded successfully:', window.Chart.version);
+                return true;
+            }
+            return false;
+        }
+        
+        // Check immediately when script loads
+        setTimeout(checkChartJS, 100);
+        
+        window.addEventListener('load', function() {
+            checkChartJS();
+        });
+    </script>
     
     <style>
         * {
@@ -751,8 +778,9 @@
             const ctx = document.getElementById(canvasId);
             const dataPoints = getDataPoints();
             const chartData = generateTimeSeriesData(basePrice, dataPoints);
+            const ChartJS = window.Chart || Chart;
             
-            return new Chart(ctx, {
+            return new ChartJS(ctx, {
                 type: 'line',
                 data: {
                     labels: chartData.labels,
@@ -833,18 +861,48 @@
             });
         }
 
+        let chartInitAttempts = 0;
+        const maxChartInitAttempts = 10;
+        
+        function loadChartJSFallback() {
+            addLog('🔄 Attempting to load Chart.js from fallback CDN...');
+            
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js';
+            script.onload = function() {
+                addLog('✅ Chart.js loaded from fallback CDN');
+                setTimeout(initializeCharts, 1000);
+            };
+            script.onerror = function() {
+                addLog('❌ Fallback CDN also failed. Charts will not be available.');
+            };
+            document.head.appendChild(script);
+        }
+
         function initializeCharts() {
             try {
-                addLog('📈 Initializing Chart.js...');
+                chartInitAttempts++;
+                addLog(`📈 Initializing Chart.js... (attempt ${chartInitAttempts}/${maxChartInitAttempts})`);
                 
-                // Check if Chart.js is loaded
-                if (typeof Chart === 'undefined') {
-                    addLog('❌ Chart.js not loaded! Retrying in 2 seconds...');
+                // Check if Chart.js is loaded (multiple checks)
+                const chartAvailable = (typeof Chart !== 'undefined') || window.Chart || window.chartJSReady;
+                if (!chartAvailable) {
+                    if (chartInitAttempts >= maxChartInitAttempts) {
+                        addLog('❌ Chart.js failed to load after maximum attempts. Trying fallback...');
+                        loadChartJSFallback();
+                        return;
+                    }
+                    
+                    addLog(`❌ Chart.js not loaded! Retrying in 2 seconds... (${chartInitAttempts}/${maxChartInitAttempts})`);
                     setTimeout(initializeCharts, 2000);
                     return;
                 }
                 
+                // Ensure we have the right Chart reference
+                const ChartJS = window.Chart || Chart;
                 addLog('✅ Chart.js loaded successfully');
+                addLog(`📊 Chart.js version: ${ChartJS.version || 'unknown'}`);
+                console.log('Chart.js available:', ChartJS);
                 
                 // Create USDC chart
                 addLog('📊 Creating USDC-USD chart...');
@@ -857,9 +915,17 @@
                 addLog('📈 Live market charts initialized successfully');
                 addLog(`📊 Timeframe: ${currentTimeframe} with ${getDataPoints()} data points`);
                 
+                // Reset attempt counter on success
+                chartInitAttempts = 0;
+                
             } catch (error) {
                 addLog(`❌ Chart initialization error: ${error.message}`);
                 console.error('Chart initialization error:', error);
+                
+                if (chartInitAttempts < maxChartInitAttempts) {
+                    addLog('🔄 Retrying chart initialization...');
+                    setTimeout(initializeCharts, 3000);
+                }
             }
         }
 
@@ -1090,15 +1156,33 @@
         window.addEventListener('load', function() {
             initializeMonaco();
             
-            // Wait for Monaco and Chart.js to load, then initialize charts
-            setTimeout(() => {
-                initializeCharts();
-            }, 2000);
+            // Check Chart.js availability immediately
+            addLog(`🔍 Checking Chart.js availability... (typeof Chart: ${typeof Chart})`);
+            addLog(`🔍 Chart.js ready flag: ${window.chartJSReady}`);
+            
+            // If Chart.js is already loaded, try immediate initialization
+            if (typeof Chart !== 'undefined' && window.chartJSReady) {
+                addLog('🚀 Chart.js ready immediately! Initializing...');
+                setTimeout(initializeCharts, 500);
+            } else {
+                addLog('⏳ Chart.js not ready, waiting...');
+                // Wait for Monaco and Chart.js to load, then initialize charts
+                setTimeout(() => {
+                    addLog(`🔍 After 2s delay... (typeof Chart: ${typeof Chart})`);
+                    addLog(`🔍 Chart.js ready flag: ${window.chartJSReady}`);
+                    initializeCharts();
+                }, 2000);
+            }
             
             // Start chart updates after initialization
             setTimeout(() => {
-                startChartUpdates();
-            }, 3000);
+                if (usdcChart && btcChart) {
+                    startChartUpdates();
+                    addLog('🔄 Chart updates started');
+                } else {
+                    addLog('⚠️ Charts not ready for updates');
+                }
+            }, 6000);
         });
         
         // Update every second

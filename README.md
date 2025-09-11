@@ -4,10 +4,10 @@
 ### 🎯 Primary Objective
 Build a self-learning cryptocurrency trading system using cutting-edge 2025 AI research to achieve consistent profitability while maintaining strict risk management.
 
-### 🖥️ Dashboard Preview
+<!-- ### 🖥️ Dashboard Preview
 ![AI Trading System Dashboard](dashboard-screenshot.png)
 
-*Professional monitoring interface with Monaco Editor integration, real-time market data, and comprehensive system analytics.*
+*Professional monitoring interface with Monaco Editor integration, real-time market data, and comprehensive system analytics.* -->
 
 ### 🚀 Quick Start
 ```bash
